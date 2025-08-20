@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kütüphane Sistemi</title>
+    <title>Library System</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -96,7 +96,7 @@
             padding: 10px;
             border-radius: 5px;
             text-align: center;
-            display: none; /* Başlangıçta gizli */
+            display: none; /* Hidden by default */
         }
         .status-success {
             background-color: #d4edda;
@@ -110,34 +110,34 @@
 </head>
 <body>
 
-    <h1>Kütüphane Yönetim Sistemi</h1>
+    <h1>Simple Library System</h1>
 
-    <h2>Kitap Ekle</h2>
+    <h2>Add Book</h2>
     <form id="add-book-form">
-        <input type="text" id="isbn-input" placeholder="Eklemek için ISBN girin..." required>
-        <button type="submit" id="add-btn">Ekle</button>
+        <input type="text" id="isbn-input" placeholder="Enter ISBN to add..." required>
+        <button type="submit" id="add-btn">Add</button>
     </form>
     <div id="status"></div>
 
-    <h2>Kütüphanedeki Kitaplar</h2>
+    <h2>Books in Library</h2>
     <ul id="book-list">
-        <!-- Kitaplar buraya JavaScript ile eklenecek -->
+        <!-- Books will be added here by JavaScript -->
     </ul>
 
     <script>
-        // --- AYARLAR ---
-        // ÖNEMLİ: Bu adresi kendi Render API adresinizle değiştirin!
+        // --- SETTINGS ---
+        // IMPORTANT: Replace this URL with your own Render API address!
         const API_BASE_URL = 'https://simplelibrarysystem-web.onrender.com';
 
-        // --- ELEMENT REFERANSLARI ---
+        // --- ELEMENT REFERENCES ---
         const bookList = document.getElementById('book-list');
         const addBookForm = document.getElementById('add-book-form');
         const isbnInput = document.getElementById('isbn-input');
         const statusDiv = document.getElementById('status');
 
-        // --- FONKSİYONLAR ---
+        // --- FUNCTIONS ---
 
-        /** Durum mesajını gösterir (başarı veya hata) */
+        /** Shows a status message (success or error) */
         function showStatus(message, isError = false) {
             statusDiv.textContent = message;
             statusDiv.className = isError ? 'status-error' : 'status-success';
@@ -145,17 +145,17 @@
             setTimeout(() => { statusDiv.style.display = 'none'; }, 4000);
         }
 
-        /** API'den tüm kitapları çeker ve listeyi günceller */
+        /** Fetches all books from the API and updates the list */
         async function fetchAndDisplayBooks() {
-            bookList.innerHTML = '<li>Yükleniyor...</li>';
+            bookList.innerHTML = '<li>Loading...</li>';
             try {
                 const response = await fetch(`${API_BASE_URL}/books`);
-                if (!response.ok) throw new Error('Kitaplar alınamadı.');
+                if (!response.ok) throw new Error('Could not fetch books.');
                 const books = await response.json();
 
-                bookList.innerHTML = ''; // Listeyi temizle
+                bookList.innerHTML = ''; // Clear the list
                 if (books.length === 0) {
-                    bookList.innerHTML = '<li>Kütüphanede hiç kitap yok.</li>';
+                    bookList.innerHTML = '<li>There are no books in the library.</li>';
                     return;
                 }
 
@@ -168,22 +168,22 @@
                             <div class="book-author">${book.author}</div>
                             <div class="book-isbn">ISBN: ${book.isbn}</div>
                         </div>
-                        <button class="delete-btn" data-isbn="${book.isbn}">Sil</button>
+                        <button class="delete-btn" data-isbn="${book.isbn}">Delete</button>
                     `;
                     bookList.appendChild(li);
                 });
             } catch (error) {
-                bookList.innerHTML = `<li>Bir hata oluştu: ${error.message}</li>`;
+                bookList.innerHTML = `<li>An error occurred: ${error.message}</li>`;
             }
         }
 
-        /** Yeni bir kitap ekler */
+        /** Adds a new book */
         async function handleAddBook(event) {
             event.preventDefault();
             const isbn = isbnInput.value.trim();
             if (!isbn) return;
 
-            showStatus('Kitap ekleniyor...', false);
+            showStatus('Adding book...', false);
 
             try {
                 const response = await fetch(`${API_BASE_URL}/books`, {
@@ -194,24 +194,24 @@
 
                 if (response.status === 201) {
                     const newBook = await response.json();
-                    showStatus(`"${newBook.title}" başarıyla eklendi!`, false);
+                    showStatus(`"${newBook.title}" successfully added!`, false);
                     isbnInput.value = '';
-                    fetchAndDisplayBooks(); // Listeyi yenile
+                    fetchAndDisplayBooks(); // Refresh the list
                 } else {
                     const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Kitap eklenemedi.');
+                    throw new Error(errorData.detail || 'Could not add book.');
                 }
             } catch (error) {
-                showStatus(`Hata: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, true);
             }
         }
 
-        /** Bir kitabı siler */
+        /** Deletes a book */
         async function handleDeleteBook(event) {
             if (!event.target.classList.contains('delete-btn')) return;
 
             const isbn = event.target.dataset.isbn;
-            if (!confirm(`ISBN ${isbn} olan kitabı silmek istediğinizden emin misiniz?`)) return;
+            if (!confirm(`Are you sure you want to delete the book with ISBN ${isbn}?`)) return;
 
             try {
                 const response = await fetch(`${API_BASE_URL}/books/${isbn}`, {
@@ -219,18 +219,18 @@
                 });
 
                 if (response.ok) {
-                    showStatus(`Kitap (ISBN: ${isbn}) başarıyla silindi.`, false);
-                    fetchAndDisplayBooks(); // Listeyi yenile
+                    showStatus(`Book (ISBN: ${isbn}) successfully deleted.`, false);
+                    fetchAndDisplayBooks(); // Refresh the list
                 } else {
                     const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Kitap silinemedi.');
+                    throw new Error(errorData.detail || 'Could not delete book.');
                 }
             } catch (error) {
-                showStatus(`Hata: ${error.message}`, true);
+                showStatus(`Error: ${error.message}`, true);
             }
         }
 
-        // --- OLAY DİNLEYİCİLERİ ---
+        // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', fetchAndDisplayBooks);
         addBookForm.addEventListener('submit', handleAddBook);
         bookList.addEventListener('click', handleDeleteBook);
